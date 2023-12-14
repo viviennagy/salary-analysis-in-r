@@ -4,6 +4,13 @@ The primary objective of this project was to analyze a diverse dataset sourced f
 # About the data
 The dataset originates from TidyTuesday (https://github.com/rfordatascience/tidytuesday/tree/master/data/2020/2020-03-10) and represents a merging of two primary datasets, tuition_cost.csv and salary_potential.csv. Comprising various university attributes, including early and mid-career pays, in-state and out-of-state tuition fees, university types (public, private, for-profit), and alumni perspectives on making a global impact, this dataset offers a diverse array of information. 
 
+# Hypotheses
+1) The initial hypothesis postulates a significant correlation between early career pays and the presence of STEM programs or tuition fees. This posits that higher STEM percentages and higher fees might lead to higher early career pays.
+
+2) Another hypothesis assumes that the combined effect of STEM percentages and tuition fees collectively explains more variability in early career pays than STEM percentages alone. This implies that considering both factors together enhances the understanding of early career pays.
+
+3) The third hypothesis suggests that graduates from private universities exhibit a significantly higher early career pay compared to their counterparts from public universities. This implies an anticipated disparity in salary outcomes based on the type of institution attended.
+
 # Conclusions
 Influential Factors: In the linear regression analysis, a positive correlation emerged between higher STEM percentages and increased early career pays. To deepen understanding, a multiple linear regression model was employed. Incorporating out-of-state tuition fees as a predictor significantly enhanced the comprehension of the variability in early career pays.
 
