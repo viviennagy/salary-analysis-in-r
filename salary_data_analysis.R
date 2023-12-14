@@ -1,0 +1,216 @@
+# Hypotheses
+#1) The initial hypothesis postulates a significant correlation between early career pays and the presence of STEM programs or tuition fees. This posits that higher STEM percentages and higher fees might lead to higher early career pays.
+#2) Another hypothesis assumes that the combined effect of STEM percentages and tuition fees collectively explains more variability in early career pays than STEM percentages alone. This implies that considering both factors together enhances the understanding of early career pays.
+#3) The third hypothesis suggests that graduates from private universities exhibit a significantly higher early career pay compared to their counterparts from public universities. This implies an anticipated disparity in salary outcomes based on the type of institution attended.
+
+#Reading the data
+url <- 'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-10/salary_potential.csv'
+salary_potential <- readr::read_csv(url)
+nrow(salary_potential)
+
+url2 <- 'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-10/tuition_cost.csv'
+tuition_cost <- readr::read_csv(url2)
+nrow(tuition_cost)
+
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+install.packages("car")
+library(car)
+install.packages("lmtest")
+library(lmtest)
+
+#Merging the two data tables
+uni_data <- salary_potential%>% 
+  left_join(tuition_cost, by = "name")
+
+#Checking the data
+head(uni_data)
+str(uni_data)
+summary(uni_data)
+view(uni_data)
+nrow(uni_data)
+
+#Handling missing values
+na_rows <- rowSums(is.na(uni_data))
+na_count <- sum(na_rows > 0)
+print(na_count)
+cleaned_data <- na.omit(uni_data)
+nrow(cleaned_data)
+
+#Exploratory data analysis
+#Type
+ggplot(cleaned_data, aes(x = type, fill = type)) +
+  geom_bar() +
+  labs(x = "University Type", y = "Frequency", title = "University Types") +
+  theme_minimal()
+
+#Early career pay
+library(ggplot2)
+ggplot(cleaned_data, aes(x = early_career_pay)) +
+  geom_histogram(binwidth = 2000, fill = "pink", color = "black") +
+  geom_density(aes(y = ..count.. * 2000), color = "black") +
+  labs(x = "Early Career Pay", y = "Frequency", title = "Distribution of Early Career Pay")
+
+boxplot(cleaned_data$early_career_pay)
+cleaned_early_career_pay <- cleaned_data$early_career_pay[!cleaned_data$early_career_pay %in% boxplot.stats(cleaned_data$early_career_pay)$out]
+cleaned_data$cleaned_early_career_pay <- ifelse(cleaned_data$early_career_pay %in% cleaned_early_career_pay, cleaned_data$early_career_pay, NA)
+boxplot(cleaned_data$cleaned_early_career_pay)
+
+ggplot(cleaned_data, aes(x = cleaned_early_career_pay)) +
+  geom_histogram(binwidth = 2000, fill = "pink", color = "black") +
+  geom_density(aes(y = ..count.. * 2000), color = "black") +
+  labs(x = "Early Career Pay", y = "Frequency", title = "Distribution of Early Career Pay")
+
+#STEM percentage
+ggplot(cleaned_data, aes(x = stem_percent)) +
+  geom_histogram(binwidth = 10, fill = "pink", color = "black") +
+  geom_density(aes(y = ..count.. * 10), color = "black") +
+  labs(x = "STEM Percentage", y = "Frequency", title = "Distribution of STEM Percentage")
+
+boxplot(cleaned_data$stem_percent)
+cleaned_stem_percent <- cleaned_data$stem_percent[!cleaned_data$stem_percent %in% boxplot.stats(cleaned_data$stem_percent)$out]
+cleaned_data$cleaned_stem_percent <- ifelse(cleaned_data$stem_percent %in% cleaned_stem_percent, cleaned_data$stem_percent, NA)
+boxplot(cleaned_data$cleaned_stem_percent)
+
+ggplot(cleaned_data, aes(x = cleaned_stem_percent)) +
+  geom_histogram(binwidth = 0.05, fill = "pink", color = "black") +
+  geom_density(aes(y = ..count.. * 0.05), color = "black") +
+  labs(x = "STEM Percentage", y = "Frequency", title = "Distribution of STEM Percentage")
+
+#Out-of state total
+ggplot(cleaned_data, aes(x = out_of_state_total)) +
+  geom_histogram(binwidth = 10000, fill = "pink", color = "black") +
+  geom_density(aes(y = ..count.. * 10000), color = "black") +
+  labs(x = "Out of State Total", y = "Frequency", title = "Distribution of Out of State Total")
+boxplot(cleaned_data$out_of_state_total)
+
+# Visualizing the relationship between STEM percentage and early career pay
+ggplot(cleaned_data, aes(x = cleaned_stem_percent, y = cleaned_early_career_pay, color = type)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Percent of students in STEM", y = "Early career pay", title = "Relationship between Early Career Pay and STEM Percentage at Universities") +
+  theme_minimal()
+
+#Visualizing the relationship between fees and early career pay
+ggplot(cleaned_data, aes(x = out_of_state_total, y = cleaned_early_career_pay, color = type)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Out of state fees", y = "Early career pay", title = "Relationship between Early Career Pay and Fees at Universities") +
+  theme_minimal()
+
+#Creating a linear model to explore the relationship between early career pay and the percentage of STEM graduates/out-of-state fees
+base_m <- lm (cleaned_early_career_pay ~ cleaned_stem_percent + out_of_state_total, data=cleaned_data)
+summary(base_m)
+
+#Testing the assumptions of multiple linear regression
+#Checking for influential outliers
+library(dplyr)
+install.packages("car")
+library(car)
+cooks_distance <- cooks.distance(base_m)
+cooks_distance
+cooks.distance(base_m)[which.max(cooks.distance(base_m))] #ID
+plot(cooks_distance)
+#Based on the test there are no influential outliers impacting the model significantly
+
+#Checking the normality
+shapiro.test(base_m$residuals)
+#Based on the p-value, the residuals reasonably approximate a normal distribution
+
+#Linearity
+plot(base_m, 1)
+#Based on the plot the linearity assumption is met
+
+#Homoscedasticity
+residuals <- resid(base_m)
+fitted_values <- fitted(base_m)
+plot(fitted_values, residuals,
+     xlab = "Fitted Values",
+     ylab = "Residuals",
+     main = "Homoscedasticity")
+abline(h = 0, col = "pink")
+#Based on the graphical representation, we can assume that the homoscedasticity assumption is met
+
+#Multicollinearity
+install.packages("car")
+library(car)
+vif(base_m)
+vif_values <- vif(base_m)
+barplot(vif_values, main = "VIF Values", horiz = TRUE, col = "#ee36b4")
+abline(v = 5, lwd = 3, lty = 2)
+#Based on the VIF values, there is no multicollinearity detected."
+
+# Building the first model with 'early_career_pay' as the dependent variable and 'stem_percent' as the predictor
+model_stem <- lm(cleaned_early_career_pay ~ cleaned_stem_percent, data = cleaned_data)
+summary(model_stem)
+
+# Building the second model with 'cleaned_early_career_pay' as the dependent variable and both 'stem_percent' and 'out_of_state_total' as predictors
+model_stem_out <- lm(cleaned_early_career_pay ~ cleaned_stem_percent + out_of_state_total, data = cleaned_data)
+summary(model_stem_out)
+
+# AIC values
+AIC_simple <- AIC(model_stem)
+AIC_complex <- AIC(model_stem_out)
+
+# Adjusted R-squared values
+adjr2_simple <- summary(model_stem)$adj.r.squared
+adjr2_complex <- summary(model_stem_out)$adj.r.squared
+
+# F-statistic and df values
+f_stat_simple <- summary(model_stem)$fstatistic
+f_stat_complex <- summary(model_stem_out)$fstatistic
+df_model_simple <- f_stat_simple[2]
+df_model_complex <- f_stat_complex[2]
+df_residuals_simple <- f_stat_simple[3]
+df_residuals_complex <- f_stat_complex[3]
+
+# Model comparison
+model_comparison <- data.frame(
+  Model = c("Simple Model", "Complex Model"),
+  Adjusted_R_squared = c(adjr2_simple, adjr2_complex),
+  F_statistic = c(f_stat_simple[1], f_stat_complex[1]),
+  df_model = c(df_model_simple, df_model_complex),
+  df_residuals = c(df_residuals_simple, df_residuals_complex),
+  AIC = c(AIC_simple, AIC_complex)
+)
+
+print(model_comparison)
+#The complex model exhibits a notably higher adjusted R-squared (0.5225) compared to the simpler model (0.2573). This suggests that the additional predictor in the complex model contributes to explaining more variation in the dependent variable.
+#The likelihood-ratio test's F-statistic of 346 with a low p-value (< 2.2e-16) indicates that adding 'out_of_state_total' alongside 'cleaned_stem_percent' significantly enhances the model fit.
+#The AIC value for the complex model (12233.77) is lower, suggesting a better trade-off between goodness of fit and model complexity compared to the AIC value for the simpler model (12508.03).
+
+# Likelihood-ratio test
+lr_test <- anova(model_stem, model_stem_out)
+print(lr_test)
+#The likelihood ratio test indicates a significant improvement in fit by adding predictors to the model. The p-value (< 2.2e-16) strongly suggests that the complex model provides a better fit compared to the simpler model.
+
+
+#Examining differences in early career pays between private and public universities.
+wilc_data <- cleaned_data %>%
+  mutate(type = ifelse(type == "Public", 1, ifelse(type == "Private", 2, type)))
+wilc_data <- wilc_data %>%
+  filter(type != "For Profit")
+unique(wilc_data$type)
+wilcox.test(cleaned_early_career_pay ~ type, data = wilc_data)
+
+
+summary_stats <- aggregate(cleaned_early_career_pay ~ type, data = wilc_data,
+                           FUN = function(x) c(
+                             mean = mean(x, na.rm = TRUE),
+                             median = median(x, na.rm = TRUE),
+                             sd = sd(x, na.rm = TRUE),
+                             min = min(x, na.rm = TRUE),
+                             max = max(x, na.rm = TRUE)
+                           ))
+
+summary_stats
+
+#The statistics indicate a difference in the early career pay between public (1) and private (2) universities. Specifically, the median early career pay for public universities stands at $48,300, while for private universities, it's $50,000. The mean early career pay for public universities is approximately $49,077.69, whereas for private universities, it's roughly $51,052.66. The Wilcoxon rank sum test, comparing these two types, yields a significant p-value of 0.0004563, suggesting a notable shift in the early career pay between public and private universities.
+
+boxplot(cleaned_early_career_pay ~ type, data = wilc_data,
+        xlab = "University Type",
+        ylab = "Early Career Pay",
+        main = "Comparison of Early Career Pay between Public and Private Universities",
+        col = c("skyblue", "pink"),
+        names = c("Public", "Private"))
