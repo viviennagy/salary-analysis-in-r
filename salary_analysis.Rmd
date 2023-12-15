@@ -40,7 +40,7 @@ library(lmtest)
 ## Merging the two data tables
 
 
-```{r pressure, echo=FALSE}
+```{r pressure, echo=TRUE}
 uni_data <- salary_potential%>% 
   left_join(tuition_cost, by = "name")
 head(uni_data)
@@ -53,7 +53,7 @@ nrow(uni_data)
 
 Handling missing values
 
-```{r pressure, echo=FALSE}
+```{r pressure, echo=TRUE}
 na_rows <- rowSums(is.na(uni_data))
 na_count <- sum(na_rows > 0)
 print(na_count)
@@ -64,8 +64,9 @@ nrow(cleaned_data)
 
 #Exploratory data analysis
 
-```{r pressure, echo=FALSE}
+```{r pressure, echo=TRUE}
 #Type
+library(ggplot2)
 ggplot(cleaned_data, aes(x = type, fill = type)) +
   geom_bar() +
   labs(x = "University Type", y = "Frequency", title = "University Types") +
@@ -128,13 +129,13 @@ ggplot(cleaned_data, aes(x = out_of_state_total, y = cleaned_early_career_pay, c
 ```
 
 #Creating a linear model to explore the relationship between early career pay and the percentage of STEM graduates/out-of-state fees
-```{r pressure, echo=FALSE}
+```{r pressure, echo=TRUE}
 base_m <- lm (cleaned_early_career_pay ~ cleaned_stem_percent + out_of_state_total, data=cleaned_data)
 summary(base_m)
 ```
 
 #Testing the assumptions of multiple linear regression
-```{r pressure, echo=FALSE}
+```{r pressure, echo=TURE}
 #Checking for influential outliers
 library(dplyr)
 install.packages("car")
