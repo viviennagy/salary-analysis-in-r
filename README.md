@@ -15,6 +15,7 @@ The dataset originates from TidyTuesday (https://github.com/rfordatascience/tidy
 Influential Factors: In the linear regression analysis, a positive correlation emerged between higher STEM percentages and increased early career pays. To deepen understanding, a multiple linear regression model was employed. Incorporating out-of-state tuition fees as a predictor significantly enhanced the comprehension of the variability in early career pays.
 
 <img width="705" alt="STEM" src="https://github.com/viviennagy/salary-analysis-in-r/assets/152610692/fd67e0f5-6666-4558-ac18-fdc200550c90">
+
 <img width="712" alt="fees" src="https://github.com/viviennagy/salary-analysis-in-r/assets/152610692/a6759421-e438-4b9a-9cf6-f624589e4259">
 
 University Type Differences: The Wilcoxon rank-sum test, highlighted notable differences in early career pays between graduates of public and private universities. Early career pays were observed to be higher among graduates from private institutions in comparison to those from public universities.
