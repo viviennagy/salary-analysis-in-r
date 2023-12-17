@@ -17,8 +17,7 @@ Hypotheses
 
 #Reading the data
 
-```{r cars}
-summary(cars)
+```{r}
 
 url <- 'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-10/salary_potential.csv'
 salary_potential <- readr::read_csv(url)
